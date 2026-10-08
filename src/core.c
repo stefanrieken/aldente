@@ -5,9 +5,9 @@
 
 #include "pasta.h"
 
-#define push_arg(n) argstack[argstack_len++] = n
+#define push_arg(n) argstack->vals.arg[argstack->len++] = n
 
-#define fetch_next() code[pc++]
+#define fetch_next() code->vals.code[pc++]
 
 intptr_t lookup(intptr_t x) { return x; } // TODO implement vars
 
@@ -15,8 +15,8 @@ void run_code() {
     int result = 0;
     int n;
 
-    uint8_t cmd = code[pc++];
-    while (cmd != DONE && pc <= code_len) {
+    uint8_t cmd = code->vals.code[pc++];
+    while (cmd != DONE && pc <= code->len) {
         if (cmd < N_CMDS) {
             n = 0; // To aid the fall-throughs below
             switch(cmd) {
@@ -55,14 +55,14 @@ void run_code() {
                     n = cmd & 0b111; // and fall through:
                 case EVAL:
                     if (n == 0) n = fetch_next();
-                    int expr_idx = argstack_len-n;
-                    int prim = argstack[expr_idx];
+                    int expr_idx = argstack->len-n;
+                    int prim = argstack->vals.arg[expr_idx];
                     result = prim_group_cb[prim >> 5](prim & 0b00011111, expr_idx);
-                    argstack_len = expr_idx; // reduce argstack after eval
+                    argstack->len = expr_idx; // reduce argstack after eval
                     break;
             }
         } else push_arg(cmd); // push idx not resolved pointer; this keeps argstack word size flexible
-        cmd = code[pc++];
+        cmd = code->vals.code[pc++];
     }
 
     // Only push the last return value from an expression sequence

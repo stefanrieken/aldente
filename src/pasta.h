@@ -1,16 +1,24 @@
-
 typedef unsigned char Bytecode;
 
-extern intptr_t * argstack;
-extern int argstack_len;
-extern int argstack_size;
+struct Variable;
+
+// One-for-all array type
+typedef struct {
+    int size;
+    int len;
+    union {
+        Bytecode * code;
+        char ** str;
+        intptr_t * arg;
+        struct Variable * var;
+    } vals;
+} Array;
+
+
+extern Array * argstack;
 
 typedef intptr_t (* PrimGroupCb)(Bytecode cmd, int expr_idx);
 extern PrimGroupCb prim_group_cb[];
-
-extern intptr_t * argstack;
-extern int argstack_size;
-extern int argstack_len;
 
 extern char * int_prim_names[];
 intptr_t int_prim_group_cb(Bytecode cmd, int exp_idx);
@@ -36,9 +44,7 @@ typedef enum CoreCmd {
     N_CMDS
 } CoreCmd;
 
-extern Bytecode * code;
+extern Array * code;
 extern int pc;
-extern int code_len;
-extern int code_size;
 
 void run_code();

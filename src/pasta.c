@@ -5,16 +5,12 @@
 
 #include "pasta.h"
 
-intptr_t * argstack;
-int argstack_len;
-int argstack_size;
+Array * argstack;
 
-#define push_arg(n) argstack[argstack_len++] = n
+#define push_arg(n) argstack->vals.arg[argstack->len++] = n
 
-Bytecode * code;
+Array * code;
 int pc;
-int code_len;
-int code_size;
 
 #define fetch_next() code[pc++]
 
@@ -47,10 +43,10 @@ Bytecode bytecode_for_primitive(char * name) {
 // 2. Perform sign extension on arg expansion
 // 3. Will code ever contain an intptr_t sized int literal or direct pointer?
 void add_cmd(Bytecode cmd, intptr_t arg, int arg_size) {
-    if (code_len+arg_size+1 > code_size) { code_size += 256; code = realloc(code, code_size); }
-    code[code_len++] = cmd;
+    if (code->len+arg_size+1 > code->size) { code->size += 256; code->vals.code = realloc(code->vals.code, code->size); }
+    code->vals.code[code->len++] = cmd;
     while(arg_size > 0) {
-        code[code_len++] = arg & 0xFF; // little endian
+        code->vals.code[code->len++] = arg & 0xFF; // little endian
         arg = arg >> 8;
         arg_size--;
     }
@@ -81,10 +77,26 @@ void word_cmd(Bytecode cmd, intptr_t arg) {
     add_cmd(cmd, arg, sizeof(intptr_t));
 }
 
+Array * unique_strings;
+
+int unique_string(char * str) {
+    for (int i=0;i<unique_strings->len;i++) {
+        if(strcmp(unique_strings->vals.str[i], str) == 0) return i;
+    }
+
+    // Nothing found, so add
+    if(unique_strings->len >= unique_strings->size) {
+        unique_strings->size += 256;
+        unique_strings->vals.str = realloc(unique_strings->vals.str, unique_strings->size);
+    }
+
+    // assumed: we get to keep this string
+    unique_strings->vals.str[unique_strings->len++] = str;
+}
+
 int main (int argc, char ** argv) {
-    code = NULL;
-    code_size = 0;
-    code_len = 0;
+    unique_strings = calloc(sizeof(Array), 1);
+    code = calloc(sizeof(Array), 1);
 
     // Test expression: * 7 (* 3 2)
     void_cmd(bytecode_for_primitive("*"));
@@ -97,13 +109,14 @@ int main (int argc, char ** argv) {
     byte_cmd(EVAL, 3); // variation from before
     void_cmd(DONE);
 
-    printf("Code len: %d\n", code_len);
+    printf("Code len: %d\n", code->len);
 
     pc = 0;
-    argstack = malloc(sizeof(intptr_t) * 1024);
-    argstack_size = 1024;
-    argstack_len = 0;
+    argstack = malloc(sizeof(Array));
+    argstack->size = 1024;
+    argstack->vals.arg = (intptr_t*) malloc(sizeof(intptr_t)  * argstack->size);
+    argstack->len = 0;
 
     run_code();
-    printf("Result: %d\n", argstack[--argstack_len]);
+    printf("Result: %d\n", argstack->vals.arg[--(argstack->len)]);
 }
