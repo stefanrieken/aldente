@@ -1,5 +1,5 @@
 pasta: src/pasta.c src/core.c src/int.c
-	$(CC) $^ -o $@
+	$(CC) -g $^ -o $@
 
 clean:
 	rm pasta

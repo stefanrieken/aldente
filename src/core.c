@@ -16,7 +16,7 @@ void run_code() {
     int n;
 
     uint8_t cmd = code[pc++];
-    while (cmd != DONE && pc <= code_size) {
+    while (cmd != DONE && pc <= code_len) {
         if (cmd < N_CMDS) {
             n = 0; // To aid the fall-throughs below
             switch(cmd) {

@@ -4,22 +4,6 @@
 
 #include "pasta.h"
 
-typedef enum Primitive {
-    PRIM_TIMES
-} Primitive;
-
-typedef intptr_t (* PrimCb)(int expr_idx);
-
-intptr_t prim_times(int expr_idx) {
-    intptr_t result = 1;
-    for (int i=expr_idx+1;i<argstack_len; i++) {
-        result *= argstack[i];
-    }
-
-    return result;
-}
-
-
 // In reverse order of precedence where possible (not that we use that)
 char * int_prim_names[] = {
     "<<", ">>",
@@ -29,12 +13,12 @@ char * int_prim_names[] = {
     NULL
 };
 
-typedef enum {
+enum {
     LSL, LSR,
     OR, AND, XOR,
     LOR, LAND,
     MINUS, PLUS, REMAINDER, DIV, TIMES
-} IntCb;
+};
 
 intptr_t int_prim_group_cb(Bytecode cmd, int expr_idx) {
     intptr_t result = 0;

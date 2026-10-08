@@ -38,6 +38,7 @@ typedef enum CoreCmd {
 
 extern Bytecode * code;
 extern int pc;
+extern int code_len;
 extern int code_size;
 
 void run_code();
